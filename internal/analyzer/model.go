@@ -164,6 +164,11 @@ type Authority struct {
 	CallerOwnedOutput bool `json:"caller_owned_output"`
 }
 
+type StructuralPair struct {
+	MeasurementFieldCoverage int `json:"measurement_field_coverage"`
+	ScanFailClosed           int `json:"scan_fail_closed"`
+}
+
 type Improvement struct {
 	State          string  `json:"state"`
 	Reason         string  `json:"reason"`
@@ -228,6 +233,7 @@ type ImpactReceipt struct {
 	RunnerDigest    string            `json:"runner_digest"`
 	Authority       Authority         `json:"authority"`
 	Improvement     Improvement       `json:"improvement"`
+	StructuralPair  StructuralPair    `json:"structural_pair"`
 	Inventory       Inventory         `json:"inventory"`
 }
 
@@ -245,19 +251,20 @@ type ScenarioSummary struct {
 }
 
 type ConformanceIndex struct {
-	Schema       string            `json:"schema"`
-	Decision     string            `json:"decision"`
-	Denominator  int               `json:"denominator"`
-	Scenarios    []ScenarioSummary `json:"scenarios"`
-	Closed       int               `json:"closed"`
-	Unknown      int               `json:"unknown"`
-	Refuted      int               `json:"refuted"`
-	Precedence   []string          `json:"precedence"`
-	Tests        TestMetrics       `json:"tests"`
-	StageMetrics []StageMetric     `json:"stage_metrics"`
-	Authority    Authority         `json:"authority"`
-	Improvement  Improvement       `json:"improvement"`
-	Inventory    Inventory         `json:"inventory"`
+	Schema         string            `json:"schema"`
+	Decision       string            `json:"decision"`
+	Denominator    int               `json:"denominator"`
+	Scenarios      []ScenarioSummary `json:"scenarios"`
+	Closed         int               `json:"closed"`
+	Unknown        int               `json:"unknown"`
+	Refuted        int               `json:"refuted"`
+	Precedence     []string          `json:"precedence"`
+	Tests          TestMetrics       `json:"tests"`
+	StageMetrics   []StageMetric     `json:"stage_metrics"`
+	Authority      Authority         `json:"authority"`
+	Improvement    Improvement       `json:"improvement"`
+	StructuralPair StructuralPair    `json:"structural_pair"`
+	Inventory      Inventory         `json:"inventory"`
 }
 
 func JSON(value any) ([]byte, error) {

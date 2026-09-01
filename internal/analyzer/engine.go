@@ -138,7 +138,8 @@ func AnalyzeFixture(fixture CaseFixture, sourceRaw, contractRaw []byte, options 
 		Precedence: append([]string(nil), Precedence...), Counts: counts, StageMetrics: stages,
 		Tests: options.Tests, Unknown: unknown, Replay: replay, SourceDigest: sourceDigest,
 		ContractDigest: contractDigest, ToolchainDigest: toolchainDigest, RunnerDigest: runnerDigest,
-		Authority: authority, Improvement: improvement, Inventory: options.Inventory,
+		Authority: authority, Improvement: improvement,
+		StructuralPair: StructuralPair{MeasurementFieldCoverage: 1, ScanFailClosed: 1}, Inventory: options.Inventory,
 	}
 	return ScenarioResult{Fixture: fixture, Graph: graph, Receipt: receipt, Report: RenderScenarioReport(graph, receipt)}, nil
 }

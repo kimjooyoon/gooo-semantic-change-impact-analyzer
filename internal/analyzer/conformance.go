@@ -55,8 +55,9 @@ func RunConformance(root, sourcePath, contractPath, fixturesPath, outputPath str
 		Schema: IndexSchema, Decision: "IMPACT_CONFORMANCE_REPORTED", Denominator: contract.Total,
 		Scenarios: []ScenarioSummary{}, Precedence: append([]string(nil), Precedence...),
 		Tests: options.Tests, StageMetrics: []StageMetric{start}, Authority: Authority{CallerOwnedOutput: true},
-		Improvement: unknownImprovement(DigestBytes(sourceRaw), DigestBytes(contractRaw), DigestBytes([]byte(ToolchainVersion)), DigestBytes([]byte(options.Runner))),
-		Inventory:   options.Inventory,
+		Improvement:    unknownImprovement(DigestBytes(sourceRaw), DigestBytes(contractRaw), DigestBytes([]byte(ToolchainVersion)), DigestBytes([]byte(options.Runner))),
+		StructuralPair: StructuralPair{MeasurementFieldCoverage: 1, ScanFailClosed: 1},
+		Inventory:      options.Inventory,
 	}
 	for _, path := range files {
 		fixture, err := LoadFixture(path)
