@@ -87,7 +87,7 @@ jq -n \
   --argjson conformance_peak_rss_kib "$conformance_peak_rss_kib" \
   --argjson integration_wall_ms "$integration_wall_ms" \
   --argjson integration_peak_rss_kib "$integration_peak_rss_kib" \
-  '{compile_wall_ms,compile_peak_rss_kib,build_wall_ms,build_peak_rss_kib,test_wall_ms,test_peak_rss_kib,conformance_wall_ms,conformance_peak_rss_kib,integration_wall_ms,integration_peak_rss_kib}' \
+  '{$compile_wall_ms,$compile_peak_rss_kib,$build_wall_ms,$build_peak_rss_kib,$test_wall_ms,$test_peak_rss_kib,$conformance_wall_ms,$conformance_peak_rss_kib,$integration_wall_ms,$integration_peak_rss_kib}' \
   > "$work/conformance/ci-stage-metrics.json"
 
 jq -e '
