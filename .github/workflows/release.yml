@@ -94,5 +94,9 @@ jobs:
           asset_url=$(jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .browser_download_url' <<<"$release_json")
           test -n "$asset_url"
           curl --fail --location --silent --show-error "$asset_url" -o "$RUNNER_TEMP/public-release.tar.gz"
-          sha256sum "$RUNNER_TEMP/public-release.tar.gz" > "$RUNNER_TEMP/public-release.tar.gz.sha256"
-          diff -u "$RUNNER_TEMP/public-release.tar.gz.sha256" "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz.sha256"
+          downloaded_digest="sha256:$(sha256sum "$RUNNER_TEMP/public-release.tar.gz" | awk '{print $1}')"
+          published_digest=$(jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .digest' <<<"$release_json")
+          test "$downloaded_digest" = "$published_digest"
+          expected_digest=$(awk '{print "sha256:"$1}' "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz.sha256")
+          test "$downloaded_digest" = "$expected_digest"
+          test "$(jq -r '.immutable' <<<"$release_json")" = "true"
