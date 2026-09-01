@@ -83,9 +83,12 @@ test "$(find "$work/conformance/scenarios" -type f -name impact-graph.json | wc 
 test -s "$work/conformance/impact-graph.json"
 test -s "$work/conformance/impact-receipt.json"
 test -s "$work/conformance/human-report.md"
-! rg -n -i 'percentage|percent|score|estimated' "$work/conformance"
-test "$(rg -c '^activity ' "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo")" = 6
-test "$(rg -c 'activity=.*(ParseSemanticDelta|BindTypedDependencies|ComputeCausalFrontier|ClassifyImpact|EmitImpactReceipt|VerifyImpactReplay)' "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo")" = 6
+if grep -E -i -n 'percentage|percent|score|estimated' "$work/conformance"; then
+  echo "qualitative score or percentage was emitted" >&2
+  exit 1
+fi
+test "$(grep -c '^activity ' "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo")" = 6
+test "$(grep -E -c 'activity=.*(ParseSemanticDelta|BindTypedDependencies|ComputeCausalFrontier|ClassifyImpact|EmitImpactReceipt|VerifyImpactReplay)' "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo")" = 6
 
 compile_dir="$work/compile"
 mkdir -p "$compile_dir"
@@ -95,7 +98,7 @@ mkdir -p "$compile_dir"
   --output-ir "$compile_dir/semantic-ir.json" \
   --output-go "$compile_dir/semantic.gooo.go"
 jq -e '.schema == "gooo/semantic-change-impact-analyzer/semantic-ir/v1" and (.activities | length) == 6 and ([.activities[].name] | length) == 6' "$compile_dir/semantic-ir.json"
-test "$(rg -c 'ParseSemanticDelta|BindTypedDependencies|ComputeCausalFrontier|ClassifyImpact|EmitImpactReceipt|VerifyImpactReplay' "$compile_dir/semantic.gooo.go")" = 1
+test "$(grep -E -c 'ParseSemanticDelta|BindTypedDependencies|ComputeCausalFrontier|ClassifyImpact|EmitImpactReceipt|VerifyImpactReplay' "$compile_dir/semantic.gooo.go")" = 1
 
 after_status=$(git -C "$repo_root" status --porcelain=v1 -z --untracked-files=all | sha256sum | awk '{print $1}')
 test "$before_status" = "$after_status"
