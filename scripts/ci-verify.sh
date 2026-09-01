@@ -26,6 +26,14 @@ run_stage() {
   printf '%s\t%s\t%s\n' "$stage" "$wall" "$rss" | tee -a "$metrics"
 }
 
+metric_value() {
+  awk -v wanted_stage="$1" '$1 == wanted_stage {print $2}' "$metrics"
+}
+
+metric_rss() {
+  awk -v wanted_stage="$1" '$1 == wanted_stage {print $3}' "$metrics"
+}
+
 before_status=$(git -C "$repo_root" status --porcelain=v1 -z --untracked-files=all | sha256sum | awk '{print $1}')
 go_files=$(git -C "$repo_root" ls-files '*.go')
 test -n "$go_files"
@@ -34,6 +42,14 @@ test -z "$(cd "$repo_root" && gofmt -l $go_files)"
 run_stage build go build -trimpath -o "$work/gooo-semantic-change-impact-analyzer" ./cmd/gooo-semantic-change-impact-analyzer
 run_stage test go test ./...
 run_stage vet go vet ./...
+
+compile_dir="$work/compile"
+mkdir -p "$compile_dir"
+run_stage compile "$work/gooo-semantic-change-impact-analyzer" compile \
+  --source "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo" \
+  --contract "$repo_root/contracts/impact-denominator-v1.json" \
+  --output-ir "$compile_dir/semantic-ir.json" \
+  --output-go "$compile_dir/semantic.gooo.go"
 
 run_stage integration "$work/gooo-semantic-change-impact-analyzer" analyze \
   --source "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo" \
@@ -50,6 +66,30 @@ run_stage conformance "$work/gooo-semantic-change-impact-analyzer" conformance \
   --runner "github-actions/ubuntu-latest" \
   --tests-total 8 --tests-selected 8 --tests-executed 8 --tests-reused 0 --tests-failed 0 --tests-unknown 0
 
+compile_wall_ms=$(metric_value compile)
+compile_peak_rss_kib=$(metric_rss compile)
+build_wall_ms=$(metric_value build)
+build_peak_rss_kib=$(metric_rss build)
+test_wall_ms=$(metric_value test)
+test_peak_rss_kib=$(metric_rss test)
+conformance_wall_ms=$(metric_value conformance)
+conformance_peak_rss_kib=$(metric_rss conformance)
+integration_wall_ms=$(metric_value integration)
+integration_peak_rss_kib=$(metric_rss integration)
+jq -n \
+  --argjson compile_wall_ms "$compile_wall_ms" \
+  --argjson compile_peak_rss_kib "$compile_peak_rss_kib" \
+  --argjson build_wall_ms "$build_wall_ms" \
+  --argjson build_peak_rss_kib "$build_peak_rss_kib" \
+  --argjson test_wall_ms "$test_wall_ms" \
+  --argjson test_peak_rss_kib "$test_peak_rss_kib" \
+  --argjson conformance_wall_ms "$conformance_wall_ms" \
+  --argjson conformance_peak_rss_kib "$conformance_peak_rss_kib" \
+  --argjson integration_wall_ms "$integration_wall_ms" \
+  --argjson integration_peak_rss_kib "$integration_peak_rss_kib" \
+  '{$compile_wall_ms,$compile_peak_rss_kib,$build_wall_ms,$build_peak_rss_kib,$test_wall_ms,$test_peak_rss_kib,$conformance_wall_ms,$conformance_peak_rss_kib,$integration_wall_ms,$integration_peak_rss_kib}' \
+  > "$work/conformance/ci-stage-metrics.json"
+
 jq -e '
   .schema == "gooo/semantic-change-impact-analyzer/conformance-index/v1" and
   .denominator == 8 and
@@ -60,6 +100,8 @@ jq -e '
   .authority.repository_writes == 0 and .authority.commits == 0 and
   .authority.pushes == 0 and .authority.merges == 0 and .authority.releases == 0 and
   .authority.caller_owned_output == true and
+  .structural_pair.measurement_field_coverage == 1 and
+  .structural_pair.scan_fail_closed == 1 and
   .improvement.state == "UNKNOWN" and
   .improvement.unknown.stage != "" and .improvement.unknown.step != "" and
   .improvement.unknown.reason != "" and .improvement.unknown.unknown_class != "" and
@@ -83,22 +125,38 @@ test "$(find "$work/conformance/scenarios" -type f -name impact-graph.json | wc 
 test -s "$work/conformance/impact-graph.json"
 test -s "$work/conformance/impact-receipt.json"
 test -s "$work/conformance/human-report.md"
-if grep -E -i -n 'percentage|percent|score|estimated' "$work/conformance"; then
-  echo "qualitative score or percentage was emitted" >&2
+if ! find "$work/conformance" -type f \( -name '*.json' -o -name '*.md' \) -print0 | sort -z > "$work/scan-files.bin"; then
+  echo "could not enumerate the explicit qualitative-scan file scope" >&2
   exit 1
 fi
+scan_files=()
+while IFS= read -r -d '' file; do
+  scan_files+=("$file")
+done < "$work/scan-files.bin"
+test "${#scan_files[@]}" -gt 0
+if grep -E -i -n 'percentage|percent|score|estimated' "${scan_files[@]}"; then
+  echo "qualitative score or percentage was emitted" >&2
+  exit 1
+else
+  scan_status=$?
+  if [[ "$scan_status" -ne 1 ]]; then
+    echo "qualitative scan could not read its explicit file scope" >&2
+    exit "$scan_status"
+  fi
+fi
+scan_fail_closed=1
 test "$(grep -c '^activity ' "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo")" = 6
 test "$(grep -E -c 'activity=.*(ParseSemanticDelta|BindTypedDependencies|ComputeCausalFrontier|ClassifyImpact|EmitImpactReceipt|VerifyImpactReplay)' "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo")" = 6
 
-compile_dir="$work/compile"
-mkdir -p "$compile_dir"
-"$work/gooo-semantic-change-impact-analyzer" compile \
-  --source "$repo_root/examples/semantic-change-impact-analyzer-v1/main.gooo" \
-  --contract "$repo_root/contracts/impact-denominator-v1.json" \
-  --output-ir "$compile_dir/semantic-ir.json" \
-  --output-go "$compile_dir/semantic.gooo.go"
 jq -e '.schema == "gooo/semantic-change-impact-analyzer/semantic-ir/v1" and (.activities | length) == 6 and ([.activities[].name] | length) == 6' "$compile_dir/semantic-ir.json"
 test "$(grep -E -c 'ParseSemanticDelta|BindTypedDependencies|ComputeCausalFrontier|ClassifyImpact|EmitImpactReceipt|VerifyImpactReplay' "$compile_dir/semantic.gooo.go")" = 1
+
+jq -e '
+  ([.compile_wall_ms,.compile_peak_rss_kib,.build_wall_ms,.build_peak_rss_kib,
+    .test_wall_ms,.test_peak_rss_kib,.conformance_wall_ms,.conformance_peak_rss_kib,
+    .integration_wall_ms,.integration_peak_rss_kib] | all(type == "number" and floor == .))
+' "$work/conformance/ci-stage-metrics.json"
+test "$scan_fail_closed" = 1
 
 after_status=$(git -C "$repo_root" status --porcelain=v1 -z --untracked-files=all | sha256sum | awk '{print $1}')
 test "$before_status" = "$after_status"

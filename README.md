@@ -59,4 +59,8 @@ go run ./cmd/gooo-semantic-change-impact-analyzer conformance \
 GitHub Actions runs the authoritative Go 1.27 formatting, build, test, vet,
 integration, and conformance checks. Inventory counts exclude this root
 `README.md`, `.git`, caller-owned temporary output, cache, vendor, and
-toolchain internals.
+toolchain internals. CI also writes `ci-stage-metrics.json` with integer
+`wall_ms` and `peak_rss_kib` pairs for compile, build, test, conformance, and
+integration. Its qualitative-output scan enumerates JSON/Markdown files
+explicitly and fails on every scan error; `structural_pair` records the exact
+binary checks `measurement_field_coverage=1` and `scan_fail_closed=1`.
