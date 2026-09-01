@@ -1,0 +1,24 @@
+{
+  "schema": "gooo/semantic-change-impact-analyzer/denominator/v1",
+  "denominator_id": "gooo://denominator/semantic-change-impact-analyzer/v1",
+  "candidate_id": "gooo.product.semantic-change-impact-analyzer.v1",
+  "total": 8,
+  "activities": [
+    "ParseSemanticDelta",
+    "BindTypedDependencies",
+    "ComputeCausalFrontier",
+    "ClassifyImpact",
+    "EmitImpactReceipt",
+    "VerifyImpactReplay"
+  ],
+  "scenarios": [
+    {"ordinal":1,"id":"symbol-body-precise-dependent","expected_decision":"CLOSED"},
+    {"ordinal":2,"id":"type-contract-transitive-dependent","expected_decision":"CLOSED"},
+    {"ordinal":3,"id":"comment-only-zero-semantic-impact","expected_decision":"CLOSED"},
+    {"ordinal":4,"id":"deterministic-replay","expected_decision":"CLOSED"},
+    {"ordinal":5,"id":"missing-artifact-mapping","expected_decision":"UNKNOWN","unknown_class":"DIRECT_MISSING"},
+    {"ordinal":6,"id":"stale-dependency-edge","expected_decision":"UNKNOWN","unknown_class":"STALE"},
+    {"ordinal":7,"id":"omitted-known-dependent","expected_decision":"REFUTED"},
+    {"ordinal":8,"id":"unchanged-claim-semantic-digest-change","expected_decision":"REFUTED"}
+  ]
+}

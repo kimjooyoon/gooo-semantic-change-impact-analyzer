@@ -1,0 +1,45 @@
+{
+  "schema": "gooo/semantic-change-impact-analyzer/case/v1",
+  "case_id": "stale-dependency-edge",
+  "description": "The after graph keeps the topology but binds the changed symbol edge to its old digest.",
+  "before": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "stale-edge-before",
+    "release_tag": "v0.1.0",
+    "release_digest": "sha256:release-stale-before",
+    "semantic_digest": "sha256:graph-stale-before",
+    "nodes": [
+      {"id":"symbol:parse","kind":"symbol","semantic_digest":"sha256:symbol-parse-v1"},
+      {"id":"artifact:parse","kind":"artifact","semantic_digest":"sha256:artifact-parse-v1"},
+      {"id":"proof:parse","kind":"proof","semantic_digest":"sha256:proof-parse-v1"},
+      {"id":"test:parse","kind":"test","semantic_digest":"sha256:test-parse-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:parse-artifact","from":"symbol:parse","to":"artifact:parse","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-parse-v1","to_digest":"sha256:artifact-parse-v1"},
+      {"edge_id":"edge:parse-proof","from":"artifact:parse","to":"proof:parse","kind":"REQUIRES_PROOF","value_type":"artifact->proof","from_digest":"sha256:artifact-parse-v1","to_digest":"sha256:proof-parse-v1"},
+      {"edge_id":"edge:parse-test","from":"proof:parse","to":"test:parse","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-parse-v1","to_digest":"sha256:test-parse-v1"}
+    ]
+  },
+  "after": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "stale-edge-after",
+    "release_tag": "v0.1.1",
+    "release_digest": "sha256:release-stale-after",
+    "semantic_digest": "sha256:graph-stale-after",
+    "nodes": [
+      {"id":"symbol:parse","kind":"symbol","semantic_digest":"sha256:symbol-parse-v2"},
+      {"id":"artifact:parse","kind":"artifact","semantic_digest":"sha256:artifact-parse-v1"},
+      {"id":"proof:parse","kind":"proof","semantic_digest":"sha256:proof-parse-v1"},
+      {"id":"test:parse","kind":"test","semantic_digest":"sha256:test-parse-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:parse-artifact","from":"symbol:parse","to":"artifact:parse","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-parse-v1","to_digest":"sha256:artifact-parse-v1"},
+      {"edge_id":"edge:parse-proof","from":"artifact:parse","to":"proof:parse","kind":"REQUIRES_PROOF","value_type":"artifact->proof","from_digest":"sha256:artifact-parse-v1","to_digest":"sha256:proof-parse-v1"},
+      {"edge_id":"edge:parse-test","from":"proof:parse","to":"test:parse","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-parse-v1","to_digest":"sha256:test-parse-v1"}
+    ]
+  },
+  "known_dependents": [],
+  "claim": {"decision":"UNKNOWN","impacted_nodes":0,"causal_edges":0,"minimal_frontier":0},
+  "replay": {"enabled":false,"runs":0},
+  "expected": {"decision":"UNKNOWN","impacted_nodes":0,"unaffected_nodes":3,"causal_edges":0,"minimal_frontier":0,"selected_proof_obligations":0,"unknown_class":"STALE"}
+}

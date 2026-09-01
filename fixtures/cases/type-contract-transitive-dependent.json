@@ -1,0 +1,55 @@
+{
+  "schema": "gooo/semantic-change-impact-analyzer/case/v1",
+  "case_id": "type-contract-transitive-dependent",
+  "description": "A type contract change reaches a symbol, generated artifact, proof, and test transitively.",
+  "before": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "type-contract-before",
+    "release_tag": "v0.1.0",
+    "release_digest": "sha256:release-type-before",
+    "semantic_digest": "sha256:graph-type-before",
+    "nodes": [
+      {"id":"type:order","kind":"type","semantic_digest":"sha256:type-order-v1"},
+      {"id":"symbol:render-order","kind":"symbol","semantic_digest":"sha256:symbol-render-v1"},
+      {"id":"artifact:render-order","kind":"artifact","semantic_digest":"sha256:artifact-render-v1"},
+      {"id":"proof:render-order","kind":"proof","semantic_digest":"sha256:proof-render-v1"},
+      {"id":"test:render-order","kind":"test","semantic_digest":"sha256:test-render-v1"},
+      {"id":"symbol:health","kind":"symbol","semantic_digest":"sha256:symbol-health-v1"},
+      {"id":"artifact:health","kind":"artifact","semantic_digest":"sha256:artifact-health-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:order-symbol","from":"type:order","to":"symbol:render-order","kind":"CONTRACTS","value_type":"type->symbol","from_digest":"sha256:type-order-v1","to_digest":"sha256:symbol-render-v1"},
+      {"edge_id":"edge:render-artifact","from":"symbol:render-order","to":"artifact:render-order","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-render-v1","to_digest":"sha256:artifact-render-v1"},
+      {"edge_id":"edge:render-proof","from":"artifact:render-order","to":"proof:render-order","kind":"REQUIRES_PROOF","value_type":"artifact->proof","from_digest":"sha256:artifact-render-v1","to_digest":"sha256:proof-render-v1"},
+      {"edge_id":"edge:render-test","from":"proof:render-order","to":"test:render-order","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-render-v1","to_digest":"sha256:test-render-v1"},
+      {"edge_id":"edge:health-artifact","from":"symbol:health","to":"artifact:health","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-health-v1","to_digest":"sha256:artifact-health-v1"}
+    ]
+  },
+  "after": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "type-contract-after",
+    "release_tag": "v0.1.1",
+    "release_digest": "sha256:release-type-after",
+    "semantic_digest": "sha256:graph-type-after",
+    "nodes": [
+      {"id":"type:order","kind":"type","semantic_digest":"sha256:type-order-v2"},
+      {"id":"symbol:render-order","kind":"symbol","semantic_digest":"sha256:symbol-render-v1"},
+      {"id":"artifact:render-order","kind":"artifact","semantic_digest":"sha256:artifact-render-v1"},
+      {"id":"proof:render-order","kind":"proof","semantic_digest":"sha256:proof-render-v1"},
+      {"id":"test:render-order","kind":"test","semantic_digest":"sha256:test-render-v1"},
+      {"id":"symbol:health","kind":"symbol","semantic_digest":"sha256:symbol-health-v1"},
+      {"id":"artifact:health","kind":"artifact","semantic_digest":"sha256:artifact-health-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:order-symbol","from":"type:order","to":"symbol:render-order","kind":"CONTRACTS","value_type":"type->symbol","from_digest":"sha256:type-order-v2","to_digest":"sha256:symbol-render-v1"},
+      {"edge_id":"edge:render-artifact","from":"symbol:render-order","to":"artifact:render-order","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-render-v1","to_digest":"sha256:artifact-render-v1"},
+      {"edge_id":"edge:render-proof","from":"artifact:render-order","to":"proof:render-order","kind":"REQUIRES_PROOF","value_type":"artifact->proof","from_digest":"sha256:artifact-render-v1","to_digest":"sha256:proof-render-v1"},
+      {"edge_id":"edge:render-test","from":"proof:render-order","to":"test:render-order","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-render-v1","to_digest":"sha256:test-render-v1"},
+      {"edge_id":"edge:health-artifact","from":"symbol:health","to":"artifact:health","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-health-v1","to_digest":"sha256:artifact-health-v1"}
+    ]
+  },
+  "known_dependents": [],
+  "claim": {"decision":"CLOSED","impacted_nodes":4,"causal_edges":4,"minimal_frontier":1},
+  "replay": {"enabled":false,"runs":0},
+  "expected": {"decision":"CLOSED","impacted_nodes":4,"unaffected_nodes":2,"causal_edges":4,"minimal_frontier":1,"selected_proof_obligations":1}
+}
