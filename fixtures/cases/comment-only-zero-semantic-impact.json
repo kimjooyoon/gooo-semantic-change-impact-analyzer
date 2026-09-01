@@ -1,0 +1,47 @@
+{
+  "schema": "gooo/semantic-change-impact-analyzer/case/v1",
+  "case_id": "comment-only-zero-semantic-impact",
+  "description": "A comment-only source edit leaves the released semantic graph unchanged and has zero semantic impact.",
+  "before": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "comment-before",
+    "release_tag": "v0.1.0",
+    "release_digest": "sha256:release-comment-before",
+    "semantic_digest": "sha256:graph-comment-same",
+    "nodes": [
+      {"id":"symbol:format","kind":"symbol","semantic_digest":"sha256:symbol-format-v1"},
+      {"id":"artifact:format","kind":"artifact","semantic_digest":"sha256:artifact-format-v1"},
+      {"id":"proof:format","kind":"proof","semantic_digest":"sha256:proof-format-v1"},
+      {"id":"test:format","kind":"test","semantic_digest":"sha256:test-format-v1"},
+      {"id":"symbol:other","kind":"symbol","semantic_digest":"sha256:symbol-other-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:format-artifact","from":"symbol:format","to":"artifact:format","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-format-v1","to_digest":"sha256:artifact-format-v1"},
+      {"edge_id":"edge:artifact-proof","from":"artifact:format","to":"proof:format","kind":"REQUIRES_PROOF","value_type":"artifact->proof","from_digest":"sha256:artifact-format-v1","to_digest":"sha256:proof-format-v1"},
+      {"edge_id":"edge:proof-test","from":"proof:format","to":"test:format","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-format-v1","to_digest":"sha256:test-format-v1"}
+    ]
+  },
+  "after": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "comment-after",
+    "release_tag": "v0.1.1",
+    "release_digest": "sha256:release-comment-after",
+    "semantic_digest": "sha256:graph-comment-same",
+    "nodes": [
+      {"id":"symbol:format","kind":"symbol","semantic_digest":"sha256:symbol-format-v1"},
+      {"id":"artifact:format","kind":"artifact","semantic_digest":"sha256:artifact-format-v1"},
+      {"id":"proof:format","kind":"proof","semantic_digest":"sha256:proof-format-v1"},
+      {"id":"test:format","kind":"test","semantic_digest":"sha256:test-format-v1"},
+      {"id":"symbol:other","kind":"symbol","semantic_digest":"sha256:symbol-other-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:format-artifact","from":"symbol:format","to":"artifact:format","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-format-v1","to_digest":"sha256:artifact-format-v1"},
+      {"edge_id":"edge:artifact-proof","from":"artifact:format","to":"proof:format","kind":"REQUIRES_PROOF","value_type":"artifact->proof","from_digest":"sha256:artifact-format-v1","to_digest":"sha256:proof-format-v1"},
+      {"edge_id":"edge:proof-test","from":"proof:format","to":"test:format","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-format-v1","to_digest":"sha256:test-format-v1"}
+    ]
+  },
+  "known_dependents": [],
+  "claim": {"decision":"CLOSED","impacted_nodes":0,"causal_edges":0,"minimal_frontier":0},
+  "replay": {"enabled":false,"runs":0},
+  "expected": {"decision":"CLOSED","impacted_nodes":0,"unaffected_nodes":5,"causal_edges":0,"minimal_frontier":0,"selected_proof_obligations":0}
+}

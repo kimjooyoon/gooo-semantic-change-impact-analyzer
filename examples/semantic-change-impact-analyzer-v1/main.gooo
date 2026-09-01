@@ -1,0 +1,10 @@
+// Gooo owns the semantic activities for the released impact analyzer graph.
+// Go code is limited to evaluator, generator, and runtime roles.
+graph id=gooo.semantic-change-impact-analyzer.v1 release=gooo-semantic-change-impact-analyzer@v0.1.0
+
+activity id=gooo.activity.semantic-change-impact-analyzer.parse-semantic-delta activity=ParseSemanticDelta proof=FOUNDATION artifact=semantic-delta authority=READ_ONLY
+activity id=gooo.activity.semantic-change-impact-analyzer.bind-typed-dependencies activity=BindTypedDependencies proof=FOUNDATION artifact=typed-dependency-graph authority=READ_ONLY
+activity id=gooo.activity.semantic-change-impact-analyzer.compute-causal-frontier activity=ComputeCausalFrontier proof=COHERENCE artifact=causal-frontier authority=READ_ONLY
+activity id=gooo.activity.semantic-change-impact-analyzer.classify-impact activity=ClassifyImpact proof=COHERENCE artifact=impact-classification authority=READ_ONLY
+activity id=gooo.activity.semantic-change-impact-analyzer.emit-impact-receipt activity=EmitImpactReceipt proof=REGRESSION artifact=impact-receipt authority=READ_ONLY
+activity id=gooo.activity.semantic-change-impact-analyzer.verify-impact-replay activity=VerifyImpactReplay proof=REGRESSION artifact=replay-receipt authority=READ_ONLY

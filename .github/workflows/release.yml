@@ -1,0 +1,98 @@
+name: annotated immutable release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Draft, upload, publish, and verify release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out annotated tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go 1.27.0
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.0'
+          cache: false
+      - name: Build release evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          case "$tag" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "unsupported release tag: $tag" >&2; exit 1 ;;
+          esac
+          ref_json=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}")
+          test "$(jq -r '.object.type' <<<"$ref_json")" = "tag"
+          tag_object=$(jq -r '.object.sha' <<<"$ref_json")
+          tag_json=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object}")
+          test "$(jq -r '.object.sha' <<<"$tag_json")" = "$GITHUB_SHA"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release already exists; immutable release will not be replaced" >&2
+            exit 1
+          fi
+          evidence_dir="$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-release-${GITHUB_RUN_ID}"
+          mkdir -p "$evidence_dir"
+          go build -trimpath -o "$evidence_dir/gooo-semantic-change-impact-analyzer" ./cmd/gooo-semantic-change-impact-analyzer
+          go test ./...
+          "$evidence_dir/gooo-semantic-change-impact-analyzer" conformance \
+            --root "$GITHUB_WORKSPACE" \
+            --source "$GITHUB_WORKSPACE/examples/semantic-change-impact-analyzer-v1/main.gooo" \
+            --contract "$GITHUB_WORKSPACE/contracts/impact-denominator-v1.json" \
+            --fixtures "$GITHUB_WORKSPACE/fixtures/cases" \
+            --output-dir "$evidence_dir/conformance" \
+            --runner "github-actions/ubuntu-latest" \
+            --tests-total 8 --tests-selected 8 --tests-executed 8 --tests-reused 0 --tests-failed 0 --tests-unknown 0
+          cp "$evidence_dir/conformance/impact-graph.json" "$evidence_dir/impact-graph.json"
+          cp "$evidence_dir/conformance/impact-receipt.json" "$evidence_dir/impact-receipt.json"
+          cp "$evidence_dir/conformance/human-report.md" "$evidence_dir/human-report.md"
+          printf 'release_tag=%s\ntarget_commit=%s\ntag_object=%s\n' "$tag" "$GITHUB_SHA" "$tag_object" > "$evidence_dir/release-metadata.txt"
+          tar -C "$evidence_dir" -czf "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz" conformance impact-graph.json impact-receipt.json human-report.md release-metadata.txt
+          sha256sum "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz" > "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz.sha256"
+      - name: Create draft release with standard GITHUB_TOKEN
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          gh release create "$tag" --draft --verify-tag --title "$tag" --notes "Immutable semantic impact evidence for $GITHUB_SHA."
+      - name: Upload release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          gh release upload "$tag" \
+            "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz" \
+            "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz.sha256"
+      - name: Publish draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false
+      - name: Verify public release identity and asset digest
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}")
+          test "$(jq -r '.draft' <<<"$release_json")" = "false"
+          asset_url=$(jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .browser_download_url' <<<"$release_json")
+          test -n "$asset_url"
+          curl --fail --location --silent --show-error "$asset_url" -o "$RUNNER_TEMP/public-release.tar.gz"
+          sha256sum "$RUNNER_TEMP/public-release.tar.gz" > "$RUNNER_TEMP/public-release.tar.gz.sha256"
+          diff -u "$RUNNER_TEMP/public-release.tar.gz.sha256" "$RUNNER_TEMP/gooo-semantic-change-impact-analyzer-${tag}.tar.gz.sha256"

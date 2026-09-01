@@ -1,0 +1,49 @@
+{
+  "schema": "gooo/semantic-change-impact-analyzer/case/v1",
+  "case_id": "omitted-known-dependent",
+  "description": "The after graph omits a known generated artifact even though the semantic source changed.",
+  "before": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "omitted-dependent-before",
+    "release_tag": "v0.1.0",
+    "release_digest": "sha256:release-omitted-before",
+    "semantic_digest": "sha256:graph-omitted-before",
+    "nodes": [
+      {"id":"symbol:render","kind":"symbol","semantic_digest":"sha256:symbol-render-v1"},
+      {"id":"artifact:render","kind":"artifact","semantic_digest":"sha256:artifact-render-v1"},
+      {"id":"proof:render","kind":"proof","semantic_digest":"sha256:proof-render-v1"},
+      {"id":"test:render","kind":"test","semantic_digest":"sha256:test-render-v1"},
+      {"id":"symbol:health","kind":"symbol","semantic_digest":"sha256:symbol-health-v1"},
+      {"id":"artifact:health","kind":"artifact","semantic_digest":"sha256:artifact-health-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:render-artifact","from":"symbol:render","to":"artifact:render","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-render-v1","to_digest":"sha256:artifact-render-v1"},
+      {"edge_id":"edge:artifact-proof","from":"artifact:render","to":"proof:render","kind":"REQUIRES_PROOF","value_type":"artifact->proof","from_digest":"sha256:artifact-render-v1","to_digest":"sha256:proof-render-v1"},
+      {"edge_id":"edge:proof-test","from":"proof:render","to":"test:render","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-render-v1","to_digest":"sha256:test-render-v1"},
+      {"edge_id":"edge:health-artifact","from":"symbol:health","to":"artifact:health","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-health-v1","to_digest":"sha256:artifact-health-v1"}
+    ]
+  },
+  "after": {
+    "schema": "gooo/semantic-change-impact-analyzer/semantic-graph/v1",
+    "graph_id": "omitted-dependent-after",
+    "release_tag": "v0.1.1",
+    "release_digest": "sha256:release-omitted-after",
+    "semantic_digest": "sha256:graph-omitted-after",
+    "nodes": [
+      {"id":"symbol:render","kind":"symbol","semantic_digest":"sha256:symbol-render-v2"},
+      {"id":"proof:render","kind":"proof","semantic_digest":"sha256:proof-render-v1"},
+      {"id":"test:render","kind":"test","semantic_digest":"sha256:test-render-v1"},
+      {"id":"symbol:health","kind":"symbol","semantic_digest":"sha256:symbol-health-v1"},
+      {"id":"artifact:health","kind":"artifact","semantic_digest":"sha256:artifact-health-v1"}
+    ],
+    "edges": [
+      {"edge_id":"edge:render-proof","from":"symbol:render","to":"proof:render","kind":"REQUIRES_PROOF","value_type":"symbol->proof","from_digest":"sha256:symbol-render-v2","to_digest":"sha256:proof-render-v1"},
+      {"edge_id":"edge:proof-test","from":"proof:render","to":"test:render","kind":"VERIFIED_BY","value_type":"proof->test","from_digest":"sha256:proof-render-v1","to_digest":"sha256:test-render-v1"},
+      {"edge_id":"edge:health-artifact","from":"symbol:health","to":"artifact:health","kind":"GENERATES","value_type":"symbol->artifact","from_digest":"sha256:symbol-health-v1","to_digest":"sha256:artifact-health-v1"}
+    ]
+  },
+  "known_dependents": ["artifact:render","proof:render","test:render"],
+  "claim": {"decision":"CLOSED","impacted_nodes":2,"causal_edges":2,"minimal_frontier":1},
+  "replay": {"enabled":false,"runs":0},
+  "expected": {"decision":"REFUTED","impacted_nodes":2,"unaffected_nodes":2,"causal_edges":2,"minimal_frontier":1,"selected_proof_obligations":1}
+}
