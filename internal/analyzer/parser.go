@@ -209,16 +209,26 @@ func ValidateGraph(graph SemanticGraph) error {
 		return errors.New("invalid semantic graph header")
 	}
 	nodeIDs := make(map[string]bool, len(graph.Nodes))
+	nodeDigests := make(map[string]string, len(graph.Nodes))
 	for _, node := range graph.Nodes {
 		if node.ID == "" || node.Kind == "" || node.SemanticDigest == "" || nodeIDs[node.ID] {
 			return fmt.Errorf("invalid or duplicate node %s", node.ID)
 		}
 		nodeIDs[node.ID] = true
+		nodeDigests[node.ID] = node.SemanticDigest
 	}
 	edgeIDs := make(map[string]bool, len(graph.Edges))
 	for _, edge := range graph.Edges {
 		if edge.EdgeID == "" || edge.From == "" || edge.To == "" || edge.Kind == "" || edge.ValueType == "" || edgeIDs[edge.EdgeID] {
 			return fmt.Errorf("invalid or duplicate edge %s", edge.EdgeID)
+		}
+		fromDigest, fromExists := nodeDigests[edge.From]
+		toDigest, toExists := nodeDigests[edge.To]
+		if !fromExists || !toExists {
+			return fmt.Errorf("edge %s references an unknown node", edge.EdgeID)
+		}
+		if edge.FromDigest != fromDigest || edge.ToDigest != toDigest {
+			return fmt.Errorf("edge %s endpoint digest does not match its nodes", edge.EdgeID)
 		}
 		edgeIDs[edge.EdgeID] = true
 	}

@@ -53,3 +53,36 @@ func runFixtureTest(t *testing.T, caseID string) {
 		t.Fatalf("decision=%s want=%s", result.Receipt.Decision, fixture.Expected.Decision)
 	}
 }
+
+func TestValidateGraphRejectsUnknownEdgeEndpoint(t *testing.T) {
+	graph := validTestGraph()
+	graph.Edges[0].To = "missing"
+	if err := ValidateGraph(graph); err == nil {
+		t.Fatal("unknown edge endpoint was accepted")
+	}
+}
+
+func TestValidateGraphRejectsEndpointDigestMismatch(t *testing.T) {
+	graph := validTestGraph()
+	graph.Edges[0].FromDigest = "sha256:wrong"
+	if err := ValidateGraph(graph); err == nil {
+		t.Fatal("endpoint digest mismatch was accepted")
+	}
+}
+
+func validTestGraph() SemanticGraph {
+	return SemanticGraph{
+		Schema:         GraphSchema,
+		GraphID:        "test-graph",
+		ReleaseTag:     "v1.0.0",
+		ReleaseDigest:  "sha256:release",
+		SemanticDigest: "sha256:graph",
+		Nodes: []SemanticNode{
+			{ID: "a", Kind: "symbol", SemanticDigest: "sha256:a"},
+			{ID: "b", Kind: "artifact", SemanticDigest: "sha256:b"},
+		},
+		Edges: []TypedDependencyEdge{
+			{EdgeID: "a-b", From: "a", To: "b", Kind: "GENERATES", ValueType: "symbol->artifact", FromDigest: "sha256:a", ToDigest: "sha256:b"},
+		},
+	}
+}
