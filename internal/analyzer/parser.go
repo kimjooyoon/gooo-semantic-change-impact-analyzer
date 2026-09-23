@@ -37,6 +37,9 @@ func ParseSource(raw []byte) (SourceDeclaration, error) {
 		}
 		switch fields[0] {
 		case "graph":
+			if err := ensureAllowedKeys(values, "id", "release"); err != nil {
+				return SourceDeclaration{}, fmt.Errorf("line %d: %w", lineNumber, err)
+			}
 			if graphSeen || values["id"] == "" || values["release"] == "" {
 				return SourceDeclaration{}, fmt.Errorf("line %d: invalid graph declaration", lineNumber)
 			}
@@ -44,6 +47,9 @@ func ParseSource(raw []byte) (SourceDeclaration, error) {
 			declaration.Release = values["release"]
 			graphSeen = true
 		case "activity":
+			if err := ensureAllowedKeys(values, "id", "activity", "proof", "artifact", "authority"); err != nil {
+				return SourceDeclaration{}, fmt.Errorf("line %d: %w", lineNumber, err)
+			}
 			activity := Activity{
 				ID: values["id"], Name: values["activity"], Proof: values["proof"],
 				Artifact: values["artifact"], Authority: values["authority"],
@@ -92,6 +98,19 @@ func keyValues(fields []string) (map[string]string, error) {
 		values[parts[0]] = strings.Trim(parts[1], "\"'")
 	}
 	return values, nil
+}
+
+func ensureAllowedKeys(values map[string]string, allowed ...string) error {
+	allowedSet := make(map[string]bool, len(allowed))
+	for _, key := range allowed {
+		allowedSet[key] = true
+	}
+	for key := range values {
+		if !allowedSet[key] {
+			return fmt.Errorf("unsupported declaration key %s", key)
+		}
+	}
+	return nil
 }
 
 func ValidateActivities(activities []Activity) error {
