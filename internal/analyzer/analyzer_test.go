@@ -21,6 +21,13 @@ func TestUnchangedClaimDespiteSemanticDigestChange(t *testing.T) {
 	runFixtureTest(t, "unchanged-claim-semantic-digest-change")
 }
 
+func TestStripCommentPreservesQuotedCommentMarker(t *testing.T) {
+	line := `activity artifact="https://example.test/v1" // trailing comment`
+	if got, want := stripComment(line), `activity artifact="https://example.test/v1" `; got != want {
+		t.Fatalf("stripComment(%q)=%q want %q", line, got, want)
+	}
+}
+
 func runFixtureTest(t *testing.T, caseID string) {
 	t.Helper()
 	root := filepath.Clean(filepath.Join("..", ".."))

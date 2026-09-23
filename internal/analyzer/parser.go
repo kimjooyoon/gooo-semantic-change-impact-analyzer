@@ -73,8 +73,29 @@ func ParseSource(raw []byte) (SourceDeclaration, error) {
 }
 
 func stripComment(line string) string {
-	if index := strings.Index(line, "//"); index >= 0 {
-		return line[:index]
+	var quote byte
+	escaped := false
+	for index := 0; index < len(line); index++ {
+		character := line[index]
+		if escaped {
+			escaped = false
+			continue
+		}
+		if quote != 0 {
+			if character == '\\' {
+				escaped = true
+			} else if character == quote {
+				quote = 0
+			}
+			continue
+		}
+		if character == '\'' || character == '"' {
+			quote = character
+			continue
+		}
+		if character == '/' && index+1 < len(line) && line[index+1] == '/' {
+			return line[:index]
+		}
 	}
 	return line
 }
