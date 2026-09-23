@@ -24,6 +24,7 @@ func ParseSource(raw []byte) (SourceDeclaration, error) {
 	lineNumber := 0
 	graphSeen := false
 	seenActivities := map[string]bool{}
+	seenActivityIDs := map[string]bool{}
 	for scanner.Scan() {
 		lineNumber++
 		line := strings.TrimSpace(stripComment(scanner.Text()))
@@ -54,7 +55,11 @@ func ParseSource(raw []byte) (SourceDeclaration, error) {
 			if seenActivities[activity.Name] {
 				return SourceDeclaration{}, fmt.Errorf("line %d: duplicate activity %s", lineNumber, activity.Name)
 			}
+			if seenActivityIDs[activity.ID] {
+				return SourceDeclaration{}, fmt.Errorf("line %d: duplicate activity id %s", lineNumber, activity.ID)
+			}
 			seenActivities[activity.Name] = true
+			seenActivityIDs[activity.ID] = true
 			declaration.Activities = append(declaration.Activities, activity)
 		default:
 			return SourceDeclaration{}, fmt.Errorf("line %d: unsupported declaration %s", lineNumber, fields[0])
